@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 class LogoutUserUseCase {
   constructor({
     authenticationRepository,
