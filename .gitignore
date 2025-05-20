@@ -1,0 +1,7 @@
+# Abaikan folder node_modules
+node_modules/
+coverage/
+
+# Abaikan file environment
+.env
+.test.env
