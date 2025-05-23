@@ -213,6 +213,7 @@ describe('ThreadRepositoryPostgres', () => {
                     id: 'comment-123',
                     username: 'dicoding',
                     date: expect.any(String),
+                    replies: [],
                     content: 'dicoding indonesia',
                   },
                 ],
