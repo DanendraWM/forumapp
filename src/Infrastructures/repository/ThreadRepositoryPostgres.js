@@ -34,6 +34,17 @@ class ThreadRepositoryPostgres extends ThreadRepository {
     const id = `comment-${this._idGenerator()}`;
     const createdAt = new Date().toISOString();
 
+    const query = {
+      text: "INSERT INTO comments VALUES($1, $2, $3, $4, $5, $5) RETURNING id, content, owner",
+      values: [id, content, threadId, owner, createdAt],
+    };
+
+    const result = await this._pool.query(query);
+
+    return new CreatedCommentInThread({ ...result.rows[0] });
+  }
+
+  async verifyThreadExists(threadId) {
     const queryCheckThread = {
       text: "SELECT * FROM threads WHERE id = $1",
       values: [threadId],
@@ -44,15 +55,19 @@ class ThreadRepositoryPostgres extends ThreadRepository {
     if (!thread.rows.length) {
       throw new NotFoundError("lagu gagal ditambahkan. Id tidak ditemukan");
     }
+  }
 
-    const query = {
-      text: "INSERT INTO comments VALUES($1, $2, $3, $4, $5, $5) RETURNING id, content, owner",
-      values: [id, content, threadId, owner, createdAt],
+  async verifyCommentExists(commentId) {
+    const queryCheckComment = {
+      text: "SELECT * FROM comments WHERE id = $1",
+      values: [commentId],
     };
 
-    const result = await this._pool.query(query);
+    const comment = await this._pool.query(queryCheckComment);
 
-    return new CreatedCommentInThread({ ...result.rows[0] });
+    if (!comment.rows.length) {
+      throw new NotFoundError("komentar tidak ditemukan");
+    }
   }
 
   async verifyCommentOwner(id, owner) {
@@ -83,7 +98,7 @@ class ThreadRepositoryPostgres extends ThreadRepository {
     await this._pool.query(query);
   }
 
-  formatDetailThread(rows) {
+  async formatDetailThread(rows) {
     if (rows.length === 0) return null;
 
     const thread = {
@@ -106,7 +121,7 @@ class ThreadRepositoryPostgres extends ThreadRepository {
           username: row.u_comment,
           date: row.date,
           replies: [],
-          content: row.content_comment,
+          content: row.is_deleted_comment ? "**komentar telah dihapus**" : row.content_comment,
         };
       thread.comments.push(commentMap[commentId]);
       }
@@ -114,7 +129,7 @@ class ThreadRepositoryPostgres extends ThreadRepository {
       if (row.id_reply) {
         commentMap[commentId].replies.push({
           id: row.id_reply,
-          content: row.content_reply,
+          content: row.is_deleted_reply ? "**balasan telah dihapus**" : row.content_reply,
           date: row.created_at,
           username: row.u_reply,
         });
@@ -136,17 +151,13 @@ class ThreadRepositoryPostgres extends ThreadRepository {
             c.id as id_comment, 
             u_comment.username as u_comment, 
             c.created_at as date, 
-              CASE 
-                WHEN c.is_deleted = true THEN '**komentar telah dihapus**'
-                  ELSE c.content
-              END AS content_comment ,
-              r.id as id_reply,
-              CASE 
-                WHEN r.is_deleted = true THEN '**balasan telah dihapus**'
-                  ELSE r.content
-              END AS content_reply ,
-              r.created_at ,
-              u_reply.username as u_reply
+            c.content AS content_comment ,
+            c.is_deleted as is_deleted_comment,
+            r.id as id_reply,
+            r.content AS content_reply ,
+            r.created_at ,
+            u_reply.username as u_reply,
+            r.is_deleted as is_deleted_reply
           from threads t 
           left join "comments" c on c.thread_id  = t.id 
           left join replies r on r.comment_id  = c.id
@@ -159,46 +170,14 @@ class ThreadRepositoryPostgres extends ThreadRepository {
     };
 
     const result = await this._pool.query(query);
-    console.log(
-      "🚀 ~ ThreadRepositoryPostgres ~ getDetailThreadById ~ result:",
-      result
-    );
 
-    if (!result.rows.length) {
-      throw new NotFoundError("thread tidak ditemukan");
-    }
-
-    const mapThread = this.formatDetailThread(result.rows);
-
-    return mapThread;
+    return result.rows;
   }
 
   async addReplyToComment(createReplyComment) {
     const { threadId, commentId, content, owner } = createReplyComment;
     const id = `reply-${this._idGenerator()}`;
     const createdAt = new Date().toISOString();
-
-    const queryCheckThread = {
-      text: "SELECT * FROM threads WHERE id = $1",
-      values: [threadId],
-    };
-
-    const thread = await this._pool.query(queryCheckThread);
-
-    if (!thread.rows.length) {
-      throw new NotFoundError("komentar tidak ditemukan");
-    }
-
-    const queryCheckComment = {
-      text: "SELECT * FROM comments WHERE id = $1",
-      values: [commentId],
-    };
-
-    const comment = await this._pool.query(queryCheckComment);
-
-    if (!comment.rows.length) {
-      throw new NotFoundError("komentar tidak ditemukan");
-    }
 
     const query = {
       text: "INSERT INTO replies VALUES($1, $2, $3, $4, $5, $6, $6) RETURNING id, content, owner",

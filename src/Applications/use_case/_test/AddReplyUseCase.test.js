@@ -20,7 +20,13 @@ describe("AddReplyUseCase", () => {
         // mocking repository
         const mockThreadRepository = (() => {
         return {
-            addReplyToComment: jest.fn(() => Promise.resolve(expectedAddedReply)),
+            verifyThreadExists: jest.fn(() => Promise.resolve()),
+            verifyCommentExists: jest.fn(() => Promise.resolve()),
+            addReplyToComment: jest.fn(() => Promise.resolve({
+                id: "reply-123",
+                content: "A reply",
+                owner: "user-123",
+            })),
         };
         })();
     

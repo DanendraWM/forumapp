@@ -1,6 +1,6 @@
+/* eslint-disable no-undef */
 const DeleteReplyFromCommentUseCase = require("../DeleteReplyFromCommentUseCase");
 
-/* eslint-disable no-undef */
 describe("DeleteReplyFromCommentUseCase", () => {
   it("should throw NotFoundError when reply is not found", async () => {
     // Arrange
@@ -23,6 +23,8 @@ describe("DeleteReplyFromCommentUseCase", () => {
 
     // Action & Assert
     await expect(deleteReplyFromCommentUseCase.execute(useCasePayload)).rejects.toThrowError("REPLY_NOT_FOUND");
+    expect(mockThreadRepository.deleteReplyFromComment).not.toBeCalled();
+    expect(mockThreadRepository.verifyReplyAccess).toBeCalledWith(useCasePayload.replyId, useCasePayload.owner);
   });
 
   it("should orchestrating the delete reply action correctly", async () => {

@@ -8,6 +8,8 @@ class AddReplyUseCase {
 
   async execute(useCasePayload) {
     const createReplyComment = new CreateReplyComment(useCasePayload); 
+    await this._threadRepository.verifyThreadExists(createReplyComment.threadId);
+    await this._threadRepository.verifyCommentExists(createReplyComment.commentId);
     return this._threadRepository.addReplyToComment(createReplyComment);
   }
 }

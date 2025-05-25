@@ -5,7 +5,9 @@ class GetThreadUseCase {
       }
      
       async execute(useCasePayload) {
-        return this._threadRepository.getDetailThreadById(useCasePayload);
+        await this._threadRepository.verifyThreadExists(useCasePayload);
+        const mapThread = await this._threadRepository.getDetailThreadById(useCasePayload);
+        return await this._threadRepository.formatDetailThread(mapThread);
       }
 }
 
