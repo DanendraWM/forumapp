@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 
 const AddCommentUseCase = require("../AddCommentUseCase");
+const createdCommentInThread = require("../../../Domains/threads/entities/CreatedCommentInThread");
 
 describe("AddCommentUseCase", () => {
     it("should throw not found error when thread does not exist", async () => {
@@ -25,6 +26,7 @@ describe("AddCommentUseCase", () => {
 
         // Action & Assert
         await expect(addCommentUseCase.execute(useCasePayload)).rejects.toThrowError("THREAD_NOT_FOUND");
+        expect(mockThreadRepository.verifyThreadExists).rejects.toThrowError("THREAD_NOT_FOUND");
     });
     it("should orchestrating the add comment action correctly", async () => {
         // Arrange
@@ -44,11 +46,11 @@ describe("AddCommentUseCase", () => {
         const mockThreadRepository = (() => {
         return {
             verifyThreadExists: jest.fn(() => Promise.resolve()),
-            addCommentToThread: jest.fn(() => Promise.resolve({
+            addCommentToThread: jest.fn(() => Promise.resolve(new createdCommentInThread({
                 id: "comment-123",
                 content: "A comment",
                 owner: "user-123",
-            })),
+            }))),
         };
         })();
     
@@ -61,6 +63,7 @@ describe("AddCommentUseCase", () => {
     
         // Assert
         expect(addedComment).toEqual(expectedAddedComment);
+        expect(mockThreadRepository.verifyThreadExists).toBeCalledWith(useCasePayload.threadId);
         expect(mockThreadRepository.addCommentToThread).toBeCalledWith(useCasePayload);
     });
 });

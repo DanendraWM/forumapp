@@ -208,60 +208,6 @@ describe('ThreadRepositoryPostgres', () => {
     });
 
 
-
-
-
-    describe('formatDetailThread function', () => {
-        it('should format thread detail correctly', async () => {
-            // Arrange
-            const threadDetail = [{
-                thread_id: "thread-123",
-                title_thread: "dicoding",
-                body_thread: "dicoding indonesia",
-                date: "2025-05-25T04:03:04.986Z",
-                u_thread: "dicoding",
-                id_comment: "comment-123",
-                u_comment: "dicoding",
-                content_comment: "dicoding indonesia",
-                is_deleted_comment: false,
-                id_reply: "reply-123",
-                content_reply: "dicoding indonesia",
-                created_at: "2025-05-25T04:03:04.987Z",
-                u_reply: "dicoding",
-                is_deleted_reply: false,
-              }];
-            const expectedFormattedThread = {
-                id: 'thread-123',
-                title: 'dicoding',
-                body: 'dicoding indonesia',
-                date: expect.any(String),
-                username: 'dicoding',
-                comments: [
-                    {
-                        id: 'comment-123',
-                        content: 'dicoding indonesia',
-                        date: expect.any(String),
-                        username: 'dicoding',
-                        replies: [
-                            {
-                                id: 'reply-123',
-                                content: 'dicoding indonesia',
-                                date: expect.any(String),
-                                username: 'dicoding',
-                            },
-                        ],
-                    },
-                ],
-            };
-            const fakeIdGenerator = () => '123'; // stub!
-            const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, fakeIdGenerator);
-            // Action
-            const formattedThread = await threadRepositoryPostgres.formatDetailThread(threadDetail);
-            // Assert
-            expect(formattedThread).toEqual(expectedFormattedThread);
-        });
-    });
-
     describe('getThreadDetailById function', () => {
 
         it('should return thread detail correctly', async () => {

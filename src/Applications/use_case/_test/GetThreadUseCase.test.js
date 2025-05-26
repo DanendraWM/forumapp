@@ -26,6 +26,7 @@ describe("GetThreadUseCase", () => {
       "THREAD_NOT_FOUND"
     );
   });
+
   it("should orchestrating the get thread action correctly", async () => {
     // Arrange
     const useCasePayload = "thread-123";
@@ -34,18 +35,18 @@ describe("GetThreadUseCase", () => {
       id: "thread-123",
       title: "A thread",
       body: "A body",
-      date: "2023-10-01T00:00:00.000Z",
+      date: "2025-05-25T04:03:04.986Z",
       username: "user-123",
       comments: [
         {
           id: "comment-123",
           username: "user-123",
-          date: "2023-10-01T00:00:00.000Z",
+          date: "2025-05-25T04:03:04.986Z",
           replies: [
             {
               id: "reply-123",
               username: "user-456",
-              date: "2023-10-01T00:00:00.000Z",
+              date: "2025-05-25T04:03:04.987Z",
               content: "A reply",
             },
           ],
@@ -62,46 +63,21 @@ describe("GetThreadUseCase", () => {
           Promise.resolve([
             {
               thread_id: "thread-123",
-              title_thread: "dicoding",
-              body_thread: "dicoding indonesia",
+              title_thread: "A thread",
+              body_thread: "A body",
               date: "2025-05-25T04:03:04.986Z",
-              u_thread: "dicoding",
+              u_thread: "user-123",
               id_comment: "comment-123",
-              u_comment: "dicoding",
-              content_comment: "dicoding indonesia",
+              u_comment: "user-123",
+              content_comment: "A comment",
               is_deleted_comment: false,
               id_reply: "reply-123",
-              content_reply: "dicoding indonesia",
+              content_reply: "A reply",
               created_at: "2025-05-25T04:03:04.987Z",
-              u_reply: "dicoding",
+              u_reply: "user-456",
               is_deleted_reply: false,
             },
           ])
-        ),
-        formatDetailThread: jest.fn(() =>
-          Promise.resolve({
-            id: "thread-123",
-            title: "A thread",
-            body: "A body",
-            date: "2023-10-01T00:00:00.000Z",
-            username: "user-123",
-            comments: [
-              {
-                id: "comment-123",
-                username: "user-123",
-                date: "2023-10-01T00:00:00.000Z",
-                replies: [
-                  {
-                    id: "reply-123",
-                    username: "user-456",
-                    date: "2023-10-01T00:00:00.000Z",
-                    content: "A reply",
-                  },
-                ],
-                content: "A comment",
-              },
-            ],
-          })
         ),
       };
     })();
@@ -121,8 +97,106 @@ describe("GetThreadUseCase", () => {
     expect(mockThreadRepository.getDetailThreadById).toBeCalledWith(
       useCasePayload
     );
-    expect(mockThreadRepository.formatDetailThread).toBeCalledWith(
-      expect.any(Array)
-    );
   });
 });
+
+
+describe('GetThreadUseCase.formatDetailThread', () => {
+  it('should correctly format thread with comments and replies', () => {
+    // Arrange
+    const getThreadUseCase = new GetThreadUseCase({ threadRepository: {} });
+
+    const inputRows = [
+      {
+        thread_id: 'thread-123',
+        title_thread: 'Judul Thread',
+        body_thread: 'Isi Thread',
+        date: '2025-05-25T04:03:04.986Z',
+        u_thread: 'user1',
+
+        id_comment: 'comment-123',
+        u_comment: 'user2',
+        content_comment: 'Isi komentar',
+        is_deleted_comment: false,
+
+        id_reply: 'reply-456',
+        content_reply: 'Isi balasan',
+        created_at: '2025-05-25T05:00:00.000Z',
+        u_reply: 'user3',
+        is_deleted_reply: false,
+      }
+    ];
+
+    const expected = {
+      id: 'thread-123',
+      title: 'Judul Thread',
+      body: 'Isi Thread',
+      date: '2025-05-25T04:03:04.986Z',
+      username: 'user1',
+      comments: [
+        {
+          id: 'comment-123',
+          username: 'user2',
+          date: '2025-05-25T04:03:04.986Z',
+          content: 'Isi komentar',
+          replies: [
+            {
+              id: 'reply-456',
+              content: 'Isi balasan',
+              date: '2025-05-25T05:00:00.000Z',
+              username: 'user3',
+            }
+          ]
+        }
+      ]
+    };
+
+    // Act
+    const result = getThreadUseCase.formatDetailThread(inputRows);
+
+    // Assert
+    expect(result).toEqual(expected);
+  });
+
+  it('should return null if no rows are given', () => {
+    // Arrange
+    const getThreadUseCase = new GetThreadUseCase({ threadRepository: {} });
+
+    // Act
+    const result = getThreadUseCase.formatDetailThread([]);
+
+    // Assert
+    expect(result).toBeNull();
+  });
+
+  it('should format deleted comment and reply correctly', () => {
+    const getThreadUseCase = new GetThreadUseCase({ threadRepository: {} });
+
+    const inputRows = [
+      {
+        thread_id: 'thread-1',
+        title_thread: 'Judul',
+        body_thread: 'Isi',
+        date: '2025-01-01T00:00:00Z',
+        u_thread: 'userX',
+
+        id_comment: 'comment-1',
+        u_comment: 'userY',
+        content_comment: 'Komentar terhapus',
+        is_deleted_comment: true,
+
+        id_reply: 'reply-1',
+        content_reply: 'Balasan terhapus',
+        created_at: '2025-01-01T01:00:00Z',
+        u_reply: 'userZ',
+        is_deleted_reply: true,
+      }
+    ];
+
+    const result = getThreadUseCase.formatDetailThread(inputRows);
+
+    expect(result.comments[0].content).toBe('**komentar telah dihapus**');
+    expect(result.comments[0].replies[0].content).toBe('**balasan telah dihapus**');
+  });
+});
+

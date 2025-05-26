@@ -1,5 +1,6 @@
 /* eslint-disable no-undef */
 
+const CreatedThread = require("../../../Domains/threads/entities/CreatedThread");
 const AddThreadUseCase = require("../AddThreadUseCase");
 
 describe("AddThreadUseCase", () => {
@@ -21,11 +22,11 @@ describe("AddThreadUseCase", () => {
     const mockThreadRepository = (() => {
       return {
         addThread: jest.fn(() =>
-          Promise.resolve({
+          Promise.resolve(new CreatedThread({
             id: "thread-123",
             title: "A thread",
             owner: "user-123",
-          })
+          }))
         ),
       };
     })();

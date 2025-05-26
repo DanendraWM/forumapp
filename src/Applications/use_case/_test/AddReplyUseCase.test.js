@@ -1,5 +1,6 @@
 /* eslint-disable no-undef */
 const AddReplyUseCase = require("../AddReplyUseCase");
+const createdReplyInComment = require("../../../Domains/threads/entities/CreatedReplyInComment");
 
 describe("AddReplyUseCase", () => {
     it("should orchestrating the add reply action correctly", async () => {
@@ -22,11 +23,11 @@ describe("AddReplyUseCase", () => {
         return {
             verifyThreadExists: jest.fn(() => Promise.resolve()),
             verifyCommentExists: jest.fn(() => Promise.resolve()),
-            addReplyToComment: jest.fn(() => Promise.resolve({
+            addReplyToComment: jest.fn(() => Promise.resolve(new createdReplyInComment({
                 id: "reply-123",
                 content: "A reply",
                 owner: "user-123",
-            })),
+            }))),
         };
         })();
     
@@ -40,5 +41,7 @@ describe("AddReplyUseCase", () => {
         // Assert
         expect(addedReply).toEqual(expectedAddedReply);
         expect(mockThreadRepository.addReplyToComment).toBeCalledWith(useCasePayload);
+        expect(mockThreadRepository.verifyThreadExists).toBeCalledWith(useCasePayload.threadId);
+        expect(mockThreadRepository.verifyCommentExists).toBeCalledWith(useCasePayload.commentId);
     });
 });
