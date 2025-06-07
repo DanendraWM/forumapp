@@ -26,7 +26,7 @@ class ThreadRepositoryPostgres extends ThreadRepository {
 
     const result = await this._pool.query(query);
 
-    return new CreatedThread({ ...result.rows[0] });
+    return new CreatedThread(result.rows[0]);
   }
 
   async addCommentToThread(createCommentThread) {
@@ -41,7 +41,7 @@ class ThreadRepositoryPostgres extends ThreadRepository {
 
     const result = await this._pool.query(query);
 
-    return new CreatedCommentInThread({ ...result.rows[0] });
+    return new CreatedCommentInThread(result.rows[0]);
   }
 
   async verifyThreadExists(threadId) {
@@ -50,9 +50,9 @@ class ThreadRepositoryPostgres extends ThreadRepository {
       values: [threadId],
     };
 
-    const thread = await this._pool.query(queryCheckThread);
+    const { rowCount } = await this._pool.query(queryCheckThread);
 
-    if (!thread.rows.length) {
+    if (!rowCount) {
       throw new NotFoundError("lagu gagal ditambahkan. Id tidak ditemukan");
     }
   }
@@ -144,7 +144,7 @@ class ThreadRepositoryPostgres extends ThreadRepository {
 
     const result = await this._pool.query(query);
 
-    return new CreatedReplyInComment({ ...result.rows[0] });
+    return new CreatedReplyInComment(result.rows[0]);
   }
 
   async verifyReplyAccess(id, owner) {

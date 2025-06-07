@@ -25,6 +25,11 @@ describe("GetThreadUseCase", () => {
     await expect(getThreadUseCase.execute(useCasePayload)).rejects.toThrowError(
       "THREAD_NOT_FOUND"
     );
+    expect(mockThreadRepository.verifyThreadExists).toBeCalledWith(
+      useCasePayload
+    );
+    expect(mockThreadRepository.getDetailThreadById).not.toBeCalled();
+    expect(mockThreadRepository.formatDetailThread).not.toBeCalled();
   });
 
   it("should orchestrating the get thread action correctly", async () => {
@@ -198,5 +203,178 @@ describe('GetThreadUseCase.formatDetailThread', () => {
     expect(result.comments[0].content).toBe('**komentar telah dihapus**');
     expect(result.comments[0].replies[0].content).toBe('**balasan telah dihapus**');
   });
+
+  it('should not add the same comment twice if commentId already exists', () => {
+    const getThreadUseCase = new GetThreadUseCase({ threadRepository: {} });
+  
+    const rows = [
+      {
+        thread_id: 'thread-123',
+        title_thread: 'Judul',
+        body_thread: 'Isi',
+        date: '2025-05-25T04:03:04.986Z',
+        u_thread: 'user-1',
+  
+        id_comment: 'comment-1',
+        u_comment: 'user-2',
+        content_comment: 'Isi komentar',
+        is_deleted_comment: false,
+  
+        id_reply: 'reply-1',
+        content_reply: 'Balasan pertama',
+        created_at: '2025-05-25T05:00:00.000Z',
+        u_reply: 'user-3',
+        is_deleted_reply: false,
+      },
+      {
+        thread_id: 'thread-123',
+        title_thread: 'Judul',
+        body_thread: 'Isi',
+        date: '2025-05-25T04:03:04.986Z',
+        u_thread: 'user-1',
+  
+        id_comment: 'comment-1',
+        u_comment: 'user-2',
+        content_comment: 'Isi komentar',
+        is_deleted_comment: false,
+
+        id_reply: 'reply-2',
+        content_reply: 'Balasan kedua',
+        created_at: '2025-05-25T05:10:00.000Z',
+        u_reply: 'user-4',
+        is_deleted_reply: false,
+      }
+    ];
+  
+    const result = getThreadUseCase.formatDetailThread(rows);
+  
+    expect(result.comments.length).toBe(1); // Hanya satu komentar
+    expect(result.comments[0].replies.length).toBe(2); // Tapi dua balasan
+  });
+  
+  it('should format replies correctly when reply exists in row', () => {
+    // Arrange
+    const rows = [
+      {
+        thread_id: 'thread-1',
+        title_thread: 'Judul Thread',
+        body_thread: 'Isi thread',
+        date: '2025-05-25T04:03:04.986Z',
+        u_thread: 'user-1',
+        id_comment: 'comment-1',
+        u_comment: 'user-2',
+        content_comment: 'Komentar',
+        is_deleted_comment: false,
+        id_reply: 'reply-1',
+        content_reply: 'Balasan',
+        created_at: '2025-05-25T04:05:00.000Z',
+        u_reply: 'user-3',
+        is_deleted_reply: false,
+      }
+    ];
+
+    const useCase = new GetThreadUseCase({ threadRepository: {} });
+
+    // Act
+    const result = useCase.formatDetailThread(rows);
+
+    // Assert
+    expect(result).toEqual({
+      id: 'thread-1',
+      title: 'Judul Thread',
+      body: 'Isi thread',
+      date: '2025-05-25T04:03:04.986Z',
+      username: 'user-1',
+      comments: [
+        {
+          id: 'comment-1',
+          username: 'user-2',
+          date: '2025-05-25T04:03:04.986Z',
+          content: 'Komentar',
+          replies: [
+            {
+              id: 'reply-1',
+              content: 'Balasan',
+              date: '2025-05-25T04:05:00.000Z',
+              username: 'user-3'
+            }
+          ]
+        }
+      ]
+    });
+  });
+
+  it('should show deleted comment message when is_deleted_comment is true', () => {
+    // Arrange
+    const rows = [
+      {
+        thread_id: 'thread-1',
+        title_thread: 'Judul Thread',
+        body_thread: 'Isi thread',
+        date: '2025-05-25T04:03:04.986Z',
+        u_thread: 'user-1',
+        id_comment: 'comment-1',
+        u_comment: 'user-2',
+        content_comment: 'Komentar rahasia',
+        is_deleted_comment: true,
+        id_reply: null,
+        content_reply: null,
+        created_at: null,
+        u_reply: null,
+        is_deleted_reply: null,
+      }
+    ];
+
+    const useCase = new GetThreadUseCase({ threadRepository: {} });
+
+    // Act
+    const result = useCase.formatDetailThread(rows);
+
+    // Assert
+    expect(result).toEqual({
+      id: 'thread-1',
+      title: 'Judul Thread',
+      body: 'Isi thread',
+      date: '2025-05-25T04:03:04.986Z',
+      username: 'user-1',
+      comments: [
+        {
+          id: 'comment-1',
+          username: 'user-2',
+          date: '2025-05-25T04:03:04.986Z',
+          content: '**komentar telah dihapus**',
+          replies: []
+        }
+      ]
+    });
+  });
+
+  it('should show deleted reply message when is_deleted_reply is true', () => {
+    const rows = [
+      {
+        thread_id: 'thread-1',
+        title_thread: 'Judul Thread',
+        body_thread: 'Isi thread',
+        date: '2025-05-25T04:03:04.986Z',
+        u_thread: 'user-1',
+        id_comment: 'comment-1',
+        u_comment: 'user-2',
+        content_comment: 'Komentar',
+        is_deleted_comment: false,
+        id_reply: 'reply-1',
+        content_reply: 'Balasan',
+        created_at: '2025-05-25T04:05:00.000Z',
+        u_reply: 'user-3',
+        is_deleted_reply: true,
+      }
+    ];
+  
+    const useCase = new GetThreadUseCase({ threadRepository: {} });
+  
+    const result = useCase.formatDetailThread(rows);
+  
+    expect(result.comments[0].replies[0].content).toEqual('**balasan telah dihapus**');
+  });
+  
 });
 

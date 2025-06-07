@@ -377,7 +377,6 @@ describe("/threads endpoint", () => {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      console.log("🚀 ~ it ~ response:", response);
 
       // Assert
       const responseJson = JSON.parse(response.payload);

@@ -5,3 +5,4 @@ coverage/
 # Abaikan file environment
 .env
 .test.env
+Forum-api-webserver.pem
