@@ -26,6 +26,7 @@ describe("/threads endpoint", () => {
         id: "user-123",
         username: "dicoding",
       });
+      
       const accessToken = authenticationTestHelper.generateTestToken({});
       const requestPayload = {
         title: "Dicoding Indonesia",
