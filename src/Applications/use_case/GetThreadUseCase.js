@@ -28,6 +28,7 @@ class GetThreadUseCase {
               date: row.date,
               replies: [],
               content: row.is_deleted_comment ? "**komentar telah dihapus**" : row.content_comment,
+              likeCount: parseInt(row.like_count_comment) || 0,
             };
           thread.comments.push(commentMap[commentId]);
           }

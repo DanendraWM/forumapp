@@ -56,6 +56,7 @@ describe("GetThreadUseCase", () => {
             },
           ],
           content: "A comment",
+          likeCount: 0,
         },
       ],
     };
@@ -144,6 +145,7 @@ describe('GetThreadUseCase.formatDetailThread', () => {
           username: 'user2',
           date: '2025-05-25T04:03:04.986Z',
           content: 'Isi komentar',
+          likeCount: 0,
           replies: [
             {
               id: 'reply-456',
@@ -291,6 +293,7 @@ describe('GetThreadUseCase.formatDetailThread', () => {
           username: 'user-2',
           date: '2025-05-25T04:03:04.986Z',
           content: 'Komentar',
+          likeCount: 0,
           replies: [
             {
               id: 'reply-1',
@@ -343,6 +346,7 @@ describe('GetThreadUseCase.formatDetailThread', () => {
           username: 'user-2',
           date: '2025-05-25T04:03:04.986Z',
           content: '**komentar telah dihapus**',
+          likeCount: 0,
           replies: []
         }
       ]

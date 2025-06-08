@@ -451,4 +451,126 @@ describe("/threads endpoint", () => {
       expect(responseJson.status).toEqual("success");
     });
   });
+
+  describe("when PUT /threads/{threadId}/comments/{commentId}/likes", () => {
+    it("should response 404 when thread or comment not found", async () => {
+      // Arrange
+      await usersTableTestHelper.addUser({
+        id: "user-123",
+        username: "dicoding",
+      });
+      const accessToken = authenticationTestHelper.generateTestToken({});
+      const server = await createServer(container);
+
+      // Action
+      const response = await server.inject({
+        method: "PUT",
+        url: "/threads/unknown-thread-id/comments/unknown-comment-id/likes",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(404);
+      expect(responseJson.status).toEqual("fail");
+    });
+
+    it("should response 401 when user not authenticated", async () => {
+      // Arrange
+      await usersTableTestHelper.addUser({
+        id: "user-123",
+        username: "dicoding",
+      });
+      await threadTableTestHelper.addThread({
+        title: "Dicoding Indonesia",
+        body: "Belajar membuat aplikasi web dengan Node.js",
+      });
+      await commentTableTestHelper.addComment({
+        threadId: "thread-123",
+        content: "Ini adalah komentar",
+      });
+      const server = await createServer(container);
+
+      // Action
+      const response = await server.inject({
+        method: "PUT",
+        url: `/threads/thread-123/comments/comment-123/likes`,
+      });
+
+      // Assert
+      expect(response.statusCode).toEqual(401);
+      expect(response.statusMessage).toEqual("Unauthorized");
+    });
+
+    it("should response 200 and unlike comment successfully", async () => {
+      // Arrange
+      await usersTableTestHelper.addUser({
+        id: "user-123",
+        username: "dicoding",
+      });
+      const accessToken = authenticationTestHelper.generateTestToken({});
+      await threadTableTestHelper.addThread({
+        title: "Dicoding Indonesia",
+        body: "Belajar membuat aplikasi web dengan Node.js",
+      });
+      await commentTableTestHelper.addComment({
+        threadId: "thread-123",
+        content: "Ini adalah komentar",
+      });
+      await commentTableTestHelper.addLike({
+        threadId: "thread-123",
+        commentId: "comment-123",
+        userId: "user-123",
+      });
+      const server = await createServer(container);
+
+      // Action
+      const response = await server.inject({
+        method: "PUT",
+        url: `/threads/thread-123/comments/comment-123/likes`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(200);
+      expect(responseJson.status).toEqual("success");
+    });
+
+    it("should response 200 and like comment successfully", async () => {
+      // Arrange
+      await usersTableTestHelper.addUser({
+        id: "user-123",
+        username: "dicoding",
+      });
+      const accessToken = authenticationTestHelper.generateTestToken({});
+      await threadTableTestHelper.addThread({
+        title: "Dicoding Indonesia",
+        body: "Belajar membuat aplikasi web dengan Node.js",
+      });
+      await commentTableTestHelper.addComment({
+        threadId: "thread-123",
+        content: "Ini adalah komentar",
+      });
+      const server = await createServer(container);
+
+      // Action
+      const response = await server.inject({
+        method: "PUT",
+        url: `/threads/thread-123/comments/comment-123/likes`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(200);
+      expect(responseJson.status).toEqual("successtest");
+    });
+  });
 });
