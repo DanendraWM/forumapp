@@ -23,6 +23,7 @@ describe("/threads endpoint", () => {
     it("should response 201 and persisted thread", async () => {
       // Arrange
       await threadTableTestHelper.cleanTable();
+      await usersTableTestHelper.cleanTable();
       await usersTableTestHelper.addUser({
         id: "user-123",
         username: "dicoding",
