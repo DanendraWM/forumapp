@@ -16,16 +16,19 @@ describe("/threads endpoint", () => {
 
   afterEach(async () => {
     await TableTestHelper.cleanTable();
+    await usersTableTestHelper.cleanTable();
   });
 
   describe("when POST /threads", () => {
     it("should response 201 and persisted thread", async () => {
       // Arrange
       await threadTableTestHelper.cleanTable();
+      await usersTableTestHelper.cleanTable();
       await usersTableTestHelper.addUser({
         id: "user-123",
         username: "dicoding",
       });
+      
       const accessToken = authenticationTestHelper.generateTestToken({});
       const requestPayload = {
         title: "Dicoding Indonesia",
