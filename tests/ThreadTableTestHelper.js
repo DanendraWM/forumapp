@@ -24,6 +24,16 @@ const ThreadTableTestHelper = {
     const result = await pool.query(query);
     return result.rows;
   },
+
+  async findLikeById(threadId, commentId, owner) {
+    const query = {
+      text: 'SELECT * FROM like_comments WHERE thread_id = $1 AND comment_id = $2 AND owner = $3',
+      values: [threadId, commentId, owner],
+    };
+ 
+    const result = await pool.query(query);
+    return result.rows;
+  },
  
   async cleanTable() {
     await pool.query('TRUNCATE TABLE threads RESTART IDENTITY CASCADE');

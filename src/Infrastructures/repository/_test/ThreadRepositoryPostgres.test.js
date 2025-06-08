@@ -246,6 +246,7 @@ describe('ThreadRepositoryPostgres', () => {
                 u_comment: "dicoding",
                 content_comment: "dicoding indonesia",
                 is_deleted_comment: false,
+                like_count_comment: "0",
                 id_reply: "reply-123",
                 content_reply: "dicoding indonesia",
                 created_at: expect.any(String),
@@ -399,6 +400,104 @@ describe('ThreadRepositoryPostgres', () => {
             // Assert
             const replies = await RepliesTableTestHelper.findReplyDeletedById('reply-123');
             expect(replies).toHaveLength(1);
+        });
+    });
+
+    describe('verifyLikeExists function', () => {
+        it('should throw NotFoundError when like not found', async () => {
+            // Arrange
+            await TableTestHelper.cleanTable();
+            await UsersTableTestHelper.addUser({});
+            await ThreadsTableTestHelper.cleanTable();
+            const createThread = {
+                title: 'dicoding',
+                body : 'dicoding indonesia',
+                owner: 'user-123',
+            };
+            const fakeIdGenerator = () => '123'; // stub!
+            const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, fakeIdGenerator);
+            await threadRepositoryPostgres.addThread(createThread);
+            // Action & Assert
+            await expect(threadRepositoryPostgres.verifyLikeExist('thread-123','comment-123','user-123')).resolves.toEqual(false);
+        });
+
+        it('should not throw NotFoundError when like is found', async () => {
+            // Arrange
+            await TableTestHelper.cleanTable();
+            await UsersTableTestHelper.addUser({});
+            const createThread = {
+                title: 'dicoding',
+                body : 'dicoding indonesia',
+                owner: 'user-123',
+            };
+
+            const createCommentThread = {
+                threadId: 'thread-123',
+                content: 'dicoding indonesia',
+                owner: 'user-123',
+            };
+            const fakeIdGenerator = () => '123'; // stub!
+            const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, fakeIdGenerator);
+            await threadRepositoryPostgres.addThread(createThread);
+            await threadRepositoryPostgres.addCommentToThread(createCommentThread);
+            await threadRepositoryPostgres.addLike('thread-123', 'comment-123','user-123');
+            // Action & Assert
+            await expect(threadRepositoryPostgres.verifyLikeExist('thread-123','comment-123','user-123')).resolves.toEqual(true);
+        });
+    });
+
+    describe('addLike function', () => {
+        it('should persist like and return created like correctly', async () => {
+            // Arrange
+            await TableTestHelper.cleanTable();
+            await UsersTableTestHelper.addUser({});
+            const createThread = {
+                title: 'dicoding',
+                body : 'dicoding indonesia',
+                owner: 'user-123',
+            };
+            const createCommentThread = {
+                threadId: 'thread-123',
+                content: 'dicoding indonesia',
+                owner: 'user-123',
+            };
+            const fakeIdGenerator = () => '123'; // stub!
+            const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, fakeIdGenerator);
+            await threadRepositoryPostgres.addThread(createThread);
+            await threadRepositoryPostgres.addCommentToThread(createCommentThread);
+            // Action
+            await threadRepositoryPostgres.addLike('thread-123', 'comment-123','user-123');
+            // Assert
+            const likes = await ThreadsTableTestHelper.findLikeById('thread-123', 'comment-123', 'user-123');
+            expect(likes).toHaveLength(1);
+        });
+    });
+
+    describe('deleteLike function', () => {
+        it('should delete like and return deleted like correctly', async () => {
+            // Arrange
+            await TableTestHelper.cleanTable();
+            await UsersTableTestHelper.addUser({});
+            const createThread = {
+                title: 'dicoding',
+                body : 'dicoding indonesia',
+                owner: 'user-123',
+            };
+            const createCommentThread = {
+                threadId: 'thread-123',
+                content: 'dicoding indonesia',
+                owner: 'user-123',
+            };
+            const fakeIdGenerator = () => '123'; // stub!
+            const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, fakeIdGenerator);
+            await threadRepositoryPostgres.addThread(createThread);
+            await threadRepositoryPostgres.addCommentToThread(createCommentThread);
+            await threadRepositoryPostgres.addLike('thread-123', 'comment-123','user-123');
+            // Action
+            await threadRepositoryPostgres.deleteLike('thread-123', 'comment-123','user-123');
+            // Assert
+            const likes = await ThreadsTableTestHelper.findLikeById('thread-123', 'comment-123', 'user-123');
+            expect(likes).toHaveLength(0);
         });
     });
 });

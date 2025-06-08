@@ -5,6 +5,7 @@ const DeleteCommentUseCase = require("../../../../Applications/use_case/DeleteCo
 const GetThreadUseCase = require("../../../../Applications/use_case/GetThreadUseCase");
 const AddReplyUseCase = require("../../../../Applications/use_case/AddReplyUseCase");
 const DeleteReplyFromCommentUseCase = require("../../../../Applications/use_case/DeleteReplyFromCommentUseCase");
+const LikeCommentUseCase = require("../../../../Applications/use_case/LikeCommentUseCase");
 
 class ThreadsHandler {
   constructor(container) {
@@ -16,6 +17,7 @@ class ThreadsHandler {
     this.getThreadByIdHandler = this.getThreadByIdHandler.bind(this);
     this.postReplyToCommentsHandler = this.postReplyToCommentsHandler.bind(this);
     this.deleteReplyFromCommentsHandler = this.deleteReplyFromCommentsHandler.bind(this);
+    this.likeCommentHandler = this.likeCommentHandler.bind(this);
   }
 
   async postThreadHandler(request, h) {
@@ -139,6 +141,24 @@ class ThreadsHandler {
     return {
       status: "success",
       message: "reply berhasil dihapus",
+    };
+  }
+
+  async likeCommentHandler(request) {
+    const { threadId, commentId } = request.params;
+    const { id: credentialId } = request.auth.credentials;
+
+    const useCasePayload = {
+      threadId,
+      commentId,
+      owner: credentialId,
+    };
+
+    const likeCommentUseCase = this._container.getInstance(LikeCommentUseCase.name);
+    await likeCommentUseCase.execute(useCasePayload);
+
+    return {
+      status: "success",
     };
   }
 }

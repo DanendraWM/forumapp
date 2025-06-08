@@ -111,6 +111,7 @@ class ThreadRepositoryPostgres extends ThreadRepository {
             c.created_at as date, 
             c.content AS content_comment ,
             c.is_deleted as is_deleted_comment,
+             COUNT(lc.id) AS like_count_comment,
             r.id as id_reply,
             r.content AS content_reply ,
             r.created_at ,
@@ -122,7 +123,12 @@ class ThreadRepositoryPostgres extends ThreadRepository {
           left join users u_reply on u_reply.id = r."owner" 
           left join users u_comment on u_comment.id  = c."owner" 
           left join users u_thread on u_thread.id  = t."owner" 
+          LEFT JOIN like_comments lc ON lc.comment_id = c.id
+          
           where t.id  = $1
+          
+          group by  t.id, u_thread.username, c.id, u_comment.username, r.id, u_reply.username
+    
           order by c.created_at asc, r.created_at asc;`,
       values: [id],
     };
@@ -170,6 +176,38 @@ class ThreadRepositoryPostgres extends ThreadRepository {
     const query = {
       text: "UPDATE replies SET is_deleted = true WHERE id = $1 RETURNING id",
       values: [id],
+    };
+
+    await this._pool.query(query);
+  }
+
+  async verifyLikeExist(threadId, commentId, owner) {
+    const query = {
+      text: "SELECT * FROM like_comments WHERE thread_id = $1 AND comment_id = $2 AND owner = $3",
+      values: [threadId, commentId, owner],
+    };
+
+    const result = await this._pool.query(query);
+
+    return result.rowCount ? true : false;
+  }
+
+  async addLike(threadId, commentId, owner) {
+    const id = `like-${this._idGenerator()}`;
+    const createdAt = new Date().toISOString();
+
+    const query = {
+      text: "INSERT INTO like_comments VALUES($1, $2, $3, $4, $5, $5) RETURNING id",
+      values: [id, threadId, commentId, owner, createdAt],
+    };
+
+    await this._pool.query(query);
+  }
+
+  async deleteLike(threadId, commentId, owner) {
+    const query = {
+      text: "DELETE FROM like_comments WHERE thread_id = $1 AND comment_id = $2 AND owner = $3",
+      values: [threadId, commentId, owner],
     };
 
     await this._pool.query(query);
