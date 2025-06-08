@@ -16,6 +16,7 @@ describe("/threads endpoint", () => {
 
   afterEach(async () => {
     await TableTestHelper.cleanTable();
+    await usersTableTestHelper.cleanTable();
   });
 
   describe("when POST /threads", () => {
